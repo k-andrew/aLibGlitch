@@ -49,15 +49,13 @@ public class GlitchEffect {
     private static final int JPEG_QUALITY = 33;
     private static final int JPEG_CORRUPTION_COUNT = 5;
     private static final int JPEG_HEADER_SIZE = 100;
-    private static final int ANIM_FRAME_DURATION_MAX = 150;
-    private static final int ANIM_FRAME_DURATION_MIN = 50;
 
     private static Handler sMainHandler;
 
-    public static void showGlitch(Activity activity) {
+    public static void showGlitch(Activity activity, int intensity, int duration) {
         Bitmap bitmap = captureWindow(activity);
-        Bitmap[] corruptedBitmaps = makeCorruptedBitmaps(bitmap, BITMAP_COUNT);
-        showAnimation(activity, corruptedBitmaps);
+        Bitmap[] corruptedBitmaps = makeCorruptedBitmaps(bitmap, BITMAP_COUNT*intensity);
+        showAnimation(activity, corruptedBitmaps, intensity, duration / (BITMAP_COUNT*intensity));
     }
 
     private static Bitmap captureWindow(Activity activity) {
@@ -102,7 +100,7 @@ public class GlitchEffect {
         return BitmapFactory.decodeByteArray(data, 0, data.length, options);
     }
 
-    private static void showAnimation(Activity activity, Bitmap[] bitmaps) {
+    private static void showAnimation(Activity activity, Bitmap[] bitmaps, int intensity, int duration) {
         final WindowManager windowManager = (WindowManager) activity.getSystemService(Context.WINDOW_SERVICE);
         WindowManager.LayoutParams layoutParams = new WindowManager.LayoutParams(WindowManager.LayoutParams.FIRST_SUB_WINDOW);
         View decorView = activity.getWindow().getDecorView();
@@ -113,13 +111,14 @@ public class GlitchEffect {
                 | WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED;
         layoutParams.token = decorView.getRootView().getWindowToken();
 
+        layoutParams.alpha = 0.2f * intensity;
+
         final ImageView imageView = new ImageView(activity);
         AnimationDrawable animationDrawable = new AnimationDrawable();
         animationDrawable.setOneShot(true);
         int totalDuration = 0;
         Resources resources = activity.getResources();
         for (Bitmap bitmap : bitmaps) {
-            int duration = RANDOM.nextInt(ANIM_FRAME_DURATION_MAX - ANIM_FRAME_DURATION_MIN) + ANIM_FRAME_DURATION_MIN;
             totalDuration += duration;
             animationDrawable.addFrame(new BitmapDrawable(resources, bitmap), duration);
         }
